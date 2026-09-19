@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const streamDrawer = document.getElementById('streamDrawer');
   const drawerHourTitle = document.getElementById('drawerHourTitle');
   const rawTextarea = document.getElementById('rawTextarea');
+  const drawerCaret = document.getElementById('drawerCaret');
   const drawerWordCount = document.getElementById('drawerWordCount');
   const btnMic = document.getElementById('btnMic');
   const voiceBanner = document.getElementById('voiceBanner');
@@ -42,6 +43,112 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseReplay = document.getElementById('btnCloseReplay');
   const btnToggleRecall = document.getElementById('btnToggleRecall');
   const btnExportMd = document.getElementById('btnExportMd');
+
+  // Offscreen canvas for microsecond-precise character measurements (Docs Silk Engine)
+  const measureCanvas = document.createElement('canvas');
+  const measureCtx = measureCanvas.getContext('2d');
+
+  // Offscreen mirror element for computing soft-wrapped line positions in multiline textareas
+  const caretMirror = document.createElement('div');
+  caretMirror.style.position = 'absolute';
+  caretMirror.style.top = '-9999px';
+  caretMirror.style.left = '-9999px';
+  caretMirror.style.visibility = 'hidden';
+  caretMirror.style.whiteSpace = 'pre-wrap';
+  caretMirror.style.wordWrap = 'break-word';
+  caretMirror.style.overflowWrap = 'break-word';
+  caretMirror.style.pointerEvents = 'none';
+  document.body.appendChild(caretMirror);
+
+  /* ==========================================================================
+     Google Docs Silk Smooth Caret Engine (Gliding Cursor & Fluid Backspace)
+     ========================================================================== */
+  function bindSmoothCaret(input, caret) {
+    if (!input || !caret) return;
+    let typingTimer = null;
+
+    function getCaretPosition() {
+      const style = window.getComputedStyle(input);
+      const cursorPos = input.selectionStart || 0;
+      const textBefore = input.value.slice(0, cursorPos);
+
+      caretMirror.style.width = `${input.clientWidth}px`;
+      caretMirror.style.fontFamily = style.fontFamily;
+      caretMirror.style.fontSize = style.fontSize;
+      caretMirror.style.fontWeight = style.fontWeight;
+      caretMirror.style.letterSpacing = style.letterSpacing;
+      caretMirror.style.lineHeight = style.lineHeight;
+      caretMirror.style.paddingLeft = style.paddingLeft;
+      caretMirror.style.paddingRight = style.paddingRight;
+      caretMirror.style.paddingTop = style.paddingTop;
+      caretMirror.style.paddingBottom = style.paddingBottom;
+      caretMirror.style.borderLeftWidth = style.borderLeftWidth;
+      caretMirror.style.borderRightWidth = style.borderRightWidth;
+      caretMirror.style.boxSizing = style.boxSizing;
+
+      caretMirror.textContent = textBefore;
+      const marker = document.createElement('span');
+      marker.textContent = '\u200B';
+      caretMirror.appendChild(marker);
+
+      const fontSize = parseFloat(style.fontSize) || 15;
+      const lineHeight = parseFloat(style.lineHeight) || (fontSize * 1.75);
+      const verticalOffset = Math.max(0, Math.round((lineHeight - 19) / 2));
+
+      const left = marker.offsetLeft;
+      const top = marker.offsetTop + verticalOffset - input.scrollTop;
+      return { left, top };
+    }
+
+    function updateCaretPosition() {
+      if (document.activeElement !== input) return;
+
+      const pos = getCaretPosition();
+      caret.style.left = `${pos.left}px`;
+      caret.style.top = `${pos.top}px`;
+
+      // Caret stays solid during active typing/backspacing, pulses when paused
+      caret.classList.add('visible', 'typing');
+      caret.classList.remove('blinking');
+
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        caret.classList.remove('typing');
+        caret.classList.add('blinking');
+      }, 450);
+    }
+
+    input.addEventListener('focus', () => {
+      caret.classList.add('visible');
+      updateCaretPosition();
+    });
+
+    input.addEventListener('blur', () => {
+      caret.classList.remove('visible', 'typing', 'blinking');
+      clearTimeout(typingTimer);
+    });
+
+    input.addEventListener('input', () => {
+      updateCaretPosition();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' || e.key.startsWith('Arrow') || e.key === 'Enter') {
+        requestAnimationFrame(updateCaretPosition);
+      }
+    });
+
+    input.addEventListener('click', updateCaretPosition);
+    input.addEventListener('keyup', updateCaretPosition);
+    input.addEventListener('scroll', () => {
+      const pos = getCaretPosition();
+      caret.style.left = `${pos.left}px`;
+      caret.style.top = `${pos.top}px`;
+    }, { passive: true });
+
+    // Expose updater on element for programmatic sync
+    input._updateSmoothCaret = updateCaretPosition;
+  }
 
   // 17 Hourly Slots (Clean 12-Hour format without AM/PM or 24h clutter)
   const TIME_SLOTS = [
@@ -149,9 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="time-badge">${slot.label}</div>
         </div>
         <div class="content-col">
-          <textarea class="bullet-input" 
-                    placeholder="• "
-                    rows="1">${escapeHTML(entry.bullet)}</textarea>
+          <div class="smooth-input-wrap">
+            <textarea class="bullet-input" 
+                      placeholder="• "
+                      rows="1">${escapeHTML(entry.bullet)}</textarea>
+            <span class="smooth-caret"></span>
+          </div>
         </div>
         <div class="action-col">
           <button class="btn-drawer-toggle ${hasRaw ? 'has-content' : ''}" data-key="${slot.key}">
@@ -162,7 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Smooth Typing & Bullet Management
       const textarea = row.querySelector('.bullet-input');
+      const caret = row.querySelector('.smooth-caret');
       autoResizeTextarea(textarea);
+      bindSmoothCaret(textarea, caret);
 
       // On focus: if empty, start with bullet
       textarea.addEventListener('focus', () => {
@@ -232,15 +344,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       textarea.addEventListener('input', (e) => {
-        autoResizeTextarea(e.target);
-        
         // Ensure starting bullet if user typed fresh
         const val = e.target.value;
         if (val.length === 1 && val !== '•') {
           e.target.value = '• ' + val;
           e.target.selectionStart = e.target.selectionEnd = 3;
+          e.target._updateSmoothCaret?.();
         }
 
+        autoResizeTextarea(e.target);
         debounceSaveBullet(dateKey, slot.key, e.target.value);
       });
 
@@ -260,6 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function autoResizeTextarea(el) {
     el.style.height = 'auto';
     el.style.height = Math.max(44, el.scrollHeight) + 'px';
+    if (el._updateSmoothCaret) {
+      el._updateSmoothCaret();
+    }
   }
 
   /**
@@ -320,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(() => {
       rawTextarea.focus();
+      rawTextarea._updateSmoothCaret?.();
     }, 200);
   }
 
@@ -338,6 +454,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const chars = text.length;
     drawerWordCount.innerHTML = `<strong>${words}</strong> words &bull; ${chars} characters`;
   }
+
+  // Bind Docs Silk Smooth Caret to Raw Textarea Drawer
+  bindSmoothCaret(rawTextarea, drawerCaret);
 
   // Raw Textarea Input Listener
   rawTextarea.addEventListener('input', (e) => {

@@ -199,6 +199,7 @@
   resize: none;
   outline: none;
   letter-spacing: -0.005em;
+  caret-color: transparent !important;
 }
 
 .raw-textarea::placeholder {

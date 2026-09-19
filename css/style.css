@@ -475,9 +475,57 @@ body {
   box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.15);
 }
 
-/* Distilled Bullet Input (Smooth Tactile Writing Surface) */
+/* ==========================================================================
+   DOCS SILK SMOOTH TYPING ENGINE (Gliding Cursor & Fluid Typing)
+   ========================================================================== */
 .content-col {
   position: relative;
+  width: 100%;
+}
+
+.smooth-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* Hide harsh native cursor */
+.bullet-input:focus,
+.raw-textarea:focus {
+  caret-color: transparent !important;
+}
+
+/* Custom Gliding Silk Caret */
+.smooth-caret {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 2px;
+  height: 19px;
+  background: var(--accent-terracotta);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 10;
+  border-radius: 1px;
+  transition: left 0.075s cubic-bezier(0.2, 0, 0, 1), top 0.075s cubic-bezier(0.2, 0, 0, 1), opacity 0.15s ease;
+  will-change: left, top, opacity;
+}
+
+.smooth-caret.visible {
+  opacity: 1;
+}
+
+.smooth-caret.blinking {
+  animation: smoothCaretPulse 1.05s ease-in-out infinite;
+}
+
+.smooth-caret.typing {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+@keyframes smoothCaretPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 .bullet-input {
@@ -487,10 +535,9 @@ body {
   color: var(--ink-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", sans-serif;
   font-size: 15px;
-  font-weight: 450;
+  font-weight: 500;
   line-height: 1.75;
   letter-spacing: -0.011em;
-  caret-color: var(--accent-terracotta);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -500,6 +547,7 @@ body {
   min-height: 44px;
   overflow: hidden;
   transition: color 0.15s ease;
+  caret-color: transparent !important;
 }
 
 .bullet-input::placeholder {

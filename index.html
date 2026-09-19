@@ -126,12 +126,15 @@
     </div>
 
     <div class="drawer-body">
-      <textarea id="rawTextarea" 
-                class="raw-textarea" 
-                placeholder="Speak or type freely... Use Wispr Flow, Windows Win+H, or click Voice Dictation above.
+      <div class="smooth-input-wrap" style="flex: 1; display: flex; flex-direction: column;">
+        <textarea id="rawTextarea" 
+                  class="raw-textarea" 
+                  placeholder="Speak or type freely... Use Wispr Flow, Windows Win+H, or click Voice Dictation above.
 
 Paste long AI transcripts, research papers, raw meeting dumps, or code snippets here. 
 This space preserves the messy, high-volume detail without cluttering your main 1-2 bullet hourly synthesis on the front page."></textarea>
+        <span class="smooth-caret" id="drawerCaret"></span>
+      </div>
     </div>
 
     <div class="drawer-footer">
