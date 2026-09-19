@@ -1,0 +1,395 @@
+/* ==========================================================================
+   RAW STREAM SLIDE-OVER DRAWER
+   ========================================================================== */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(28, 25, 23, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.stream-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(640px, 92vw);
+  height: 100vh;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-drawer);
+  border-left: 1px solid var(--border-hairline);
+  z-index: 1100;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-drawer.open {
+  transform: translateX(0);
+}
+
+/* Drawer Header */
+.drawer-header {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #FCFBF9;
+}
+
+.drawer-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawer-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-terracotta);
+}
+
+.drawer-hour-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ink-primary);
+}
+
+.drawer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Voice Dictation Mic Button */
+.btn-mic {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-hairline);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-mic:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--ink-primary);
+}
+
+.btn-mic.recording {
+  background: #FEE2E2;
+  border-color: #EF4444;
+  color: #DC2626;
+  animation: micGlow 1.5s infinite alternate;
+}
+
+@keyframes micGlow {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  100% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.mic-wave {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+}
+
+.btn-mic.recording .mic-wave {
+  display: inline-flex;
+}
+
+.wave-bar {
+  width: 2px;
+  height: 100%;
+  background: #DC2626;
+  border-radius: 1px;
+  animation: wave 0.8s infinite ease-in-out alternate;
+}
+
+.wave-bar:nth-child(2) { animation-delay: 0.2s; }
+.wave-bar:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes wave {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
+.btn-close-drawer {
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.btn-close-drawer:hover {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
+}
+
+/* Drawer Voice Status Banner */
+.voice-banner {
+  padding: 8px 28px;
+  background: var(--accent-terracotta-soft);
+  border-bottom: 1px solid rgba(194, 65, 12, 0.15);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-terracotta);
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-banner.active {
+  display: flex;
+}
+
+/* Drawer Body & Expansive Textarea */
+.drawer-body {
+  flex: 1;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.raw-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 380px;
+  border: none;
+  background: transparent;
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.75;
+  resize: none;
+  outline: none;
+  letter-spacing: -0.005em;
+}
+
+.raw-textarea::placeholder {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* Drawer Footer */
+.drawer-footer {
+  padding: 14px 28px;
+  border-top: 1px solid var(--border-hairline);
+  background: #FCFBF9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.word-count strong {
+  color: var(--ink-secondary);
+}
+
+/* ==========================================================================
+   3-MINUTE BEDTIME ACTIVE RECALL REPLAY MODAL
+   ========================================================================== */
+.replay-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(28, 25, 23, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.replay-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.replay-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 16px;
+  width: min(780px, 94vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-modal);
+  transform: scale(0.97);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.replay-modal-overlay.active .replay-card {
+  transform: scale(1);
+}
+
+.replay-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #FCFBF9;
+  border-radius: 16px 16px 0 0;
+}
+
+.replay-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-olive);
+  margin-bottom: 4px;
+}
+
+.replay-header h2 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink-primary);
+}
+
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-toggle-recall {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-hairline);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-recall.active {
+  background: var(--accent-terracotta-soft);
+  border-color: rgba(194, 65, 12, 0.3);
+  color: var(--accent-terracotta);
+  font-weight: 600;
+}
+
+.replay-body {
+  padding: 28px 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.replay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.replay-item {
+  padding: 16px 20px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-radius: 8px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.replay-item-time {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+.replay-item-text {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-primary);
+}
+
+/* Active Recall Hidden/Blur Mode */
+.replay-modal-overlay.blind-mode .replay-item-text {
+  filter: blur(8px);
+  user-select: none;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.replay-modal-overlay.blind-mode .replay-item:hover .replay-item-text,
+.replay-modal-overlay.blind-mode .replay-item.revealed .replay-item-text {
+  filter: blur(0);
+}
+
+.replay-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--ink-muted);
+  font-style: italic;
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+
+.replay-footer {
+  padding: 16px 32px;
+  border-top: 1px solid var(--border-hairline);
+  background: #FCFBF9;
+  border-radius: 0 0 16px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.replay-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
