@@ -543,7 +543,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   resize: none;
   outline: none;
-  padding: 2px 0;
+  padding: 4px 0 6px 0;
   min-height: 44px;
   overflow: hidden;
   transition: color 0.15s ease;

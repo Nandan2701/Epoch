@@ -356,6 +356,11 @@ document.addEventListener('DOMContentLoaded', () => {
         debounceSaveBullet(dateKey, slot.key, e.target.value);
       });
 
+      // Handle paste of multiline bullets
+      textarea.addEventListener('paste', () => {
+        setTimeout(() => autoResizeTextarea(textarea), 0);
+      });
+
       // Drawer Toggle
       const drawerBtn = row.querySelector('.btn-drawer-toggle');
       drawerBtn.addEventListener('click', () => {
@@ -364,14 +369,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       ledgerContainer.appendChild(row);
     });
+
+    // Recompute accurate rendered heights for all textareas now that all rows are attached to the active DOM
+    requestAnimationFrame(() => {
+      ledgerContainer.querySelectorAll('.bullet-input').forEach(ta => {
+        autoResizeTextarea(ta);
+      });
+    });
   }
 
   /**
-   * Dynamic height auto-resizer with zero lag
+   * Dynamic height auto-resizer with zero lag - expands infinitely for any number of bullet points
    */
   function autoResizeTextarea(el) {
+    if (!el) return;
     el.style.height = 'auto';
-    el.style.height = Math.max(44, el.scrollHeight) + 'px';
+    const computedHeight = Math.max(44, el.scrollHeight + 4);
+    el.style.height = `${computedHeight}px`;
     if (el._updateSmoothCaret) {
       el._updateSmoothCaret();
     }
@@ -668,6 +682,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }[m];
     });
   }
+
+  // Maintain accurate dynamic heights across font loading and viewport changes
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      ledgerContainer.querySelectorAll('.bullet-input').forEach(ta => {
+        autoResizeTextarea(ta);
+      });
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    ledgerContainer.querySelectorAll('.bullet-input').forEach(ta => {
+      autoResizeTextarea(ta);
+    });
+  });
 
   // Initial Boot
   renderDay();
