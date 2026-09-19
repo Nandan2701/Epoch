@@ -71,11 +71,11 @@ Rather than adding heavy study sessions, Cadence implements a minimal, battle-te
 ### 1. The Monograph Masthead
 * **Live Date Display:** Full editorial typography (*"Saturday, 19 September 2026"*).
 * **Date Carousel (`< Today >`):** Effortlessly navigate to yesterday, tomorrow, or any historical day with complete state isolation.
-* **Daily Momentum Indicator:** Live hairline progress bar showing logged vs. remaining active hours (e.g. *"7 of 17 hours logged"*).
+* **Daily Momentum Indicator:** Live hairline progress bar showing logged vs. remaining active hours (e.g. *"7 of 24 hours logged"*).
 * **Autosave Heartbeat:** Minimal pulsing indicator confirming continuous Chrome cache persistence.
 
-### 2. The Main Hourly Ledger (07:00 – 24:00)
-* Minimalist vertical grid covering all 17 waking hours.
+### 2. The Main Hourly Ledger (00:00 – 24:00)
+* Minimalist vertical grid covering all 24 hours of the day (from 0 – 1 through 11 – 12).
 * **Active Hour Auto-Highlight:** The current hour is automatically highlighted with a subtle terracotta border and an architectural tag, anchoring the user's attention.
 * **Intelligent Bullet Formatting:** Typing in the bullet field automatically handles `• ` indentation; pressing `Enter` creates the next bullet line cleanly.
 * **Dynamic Word Count Badges:** Each hour row contains a drawer button that updates its badge in real time (e.g. transitioning from `+ Raw Stream / Voice` to `📝 Raw Stream (142 w)`).

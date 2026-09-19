@@ -25,7 +25,7 @@ Epoch enforces a **strict separation of concerns**:
 
 ```
 ┌──────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────┐
-│        THE MAIN LEDGER (07:00 – 24:00)           │   │      THE RAW STREAM DRAWER (SLIDE-OVER)      │
+│        THE MAIN LEDGER (00:00 – 24:00)           │   │      THE RAW STREAM DRAWER (SLIDE-OVER)      │
 │                                                  │   │                                              │
 │  Strictly 1–2 distilled bullet points per hour.  │ + │  Infinite, uncensored canvas for continuous  │
 │  "What is the single non-obvious insight here?" │   │  voice dictation, raw AI chat dumps, & code. │
@@ -37,7 +37,7 @@ Epoch enforces a **strict separation of concerns**:
 ## ✨ Features
 
 * **Architectural Monograph Aesthetic:** Warm linen paper tone (`#F8F7F4`), stone hairlines, and warm charcoal typography (`#1C1917`). Features **Newsreader** editorial serif paired with **Plus Jakarta Sans** and **JetBrains Mono**. Zero generic AI dark navy/neon blue.
-* **Hourly Ledger (07:00 – 24:00):** Real-time active hour auto-highlight, intelligent bullet formatting, and daily momentum tracking.
+* **Hourly Ledger (00:00 – 24:00):** All 24 hours of the day (0 – 1 through 11 – 12) with real-time active hour auto-highlight, intelligent bullet formatting, and daily momentum tracking.
 * **Universal Voice Dictation:** Built-in Web Speech API microphone toggle with real-time transcription, fully compatible with OS shortcuts (**Wispr Flow**, Windows **`Win + H`**, Mac Dictation).
 * **3-Minute Bedtime Replay:** Pre-sleep memory consolidation modal. Includes an active recall **"Stealth Blur Mode"** that hides bullet text until clicked, triggering neural replay in the hippocampus before sleep.
 * **100% Local-First & Private:** Saves directly to Chrome's `localStorage` (`cadence_journal_{YYYY-MM-DD}`). Zero tracking, zero remote servers, complete privacy.

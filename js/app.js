@@ -150,8 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
     input._updateSmoothCaret = updateCaretPosition;
   }
 
-  // 17 Hourly Slots (Clean 12-Hour format without AM/PM or 24h clutter)
+  // 24 Hourly Slots (Clean format starting from 0 – 1 through night 11 – 12)
   const TIME_SLOTS = [
+    { key: '00:00 – 01:00', label: '0 – 1', hour: 0 },
+    { key: '01:00 – 02:00', label: '1 – 2', hour: 1 },
+    { key: '02:00 – 03:00', label: '2 – 3', hour: 2 },
+    { key: '03:00 – 04:00', label: '3 – 4', hour: 3 },
+    { key: '04:00 – 05:00', label: '4 – 5', hour: 4 },
+    { key: '05:00 – 06:00', label: '5 – 6', hour: 5 },
+    { key: '06:00 – 07:00', label: '6 – 7', hour: 6 },
     { key: '07:00 – 08:00', label: '7 – 8', hour: 7 },
     { key: '08:00 – 09:00', label: '8 – 9', hour: 8 },
     { key: '09:00 – 10:00', label: '9 – 10', hour: 9 },
