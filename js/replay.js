@@ -30,7 +30,7 @@
           const itemEl = document.createElement('div');
           itemEl.className = 'replay-item';
           itemEl.innerHTML = `
-            <div class="replay-item-time">${hour}</div>
+            <div class="replay-item-time">${this.getSlotLabel(hour)}</div>
             <div class="replay-item-text">${this.formatBullets(item.bullet)}</div>
           `;
           itemEl.addEventListener('click', () => {
@@ -74,6 +74,29 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML.replace(/\n/g, '<br>');
+    },
+
+    getSlotLabel: function(key) {
+      const map = {
+        '07:00 – 08:00': '7 – 8',
+        '08:00 – 09:00': '8 – 9',
+        '09:00 – 10:00': '9 – 10',
+        '10:00 – 11:00': '10 – 11',
+        '11:00 – 12:00': '11 – 12',
+        '12:00 – 13:00': '12 – 1',
+        '13:00 – 14:00': '1 – 2',
+        '14:00 – 15:00': '2 – 3',
+        '15:00 – 16:00': '3 – 4',
+        '16:00 – 17:00': '4 – 5',
+        '17:00 – 18:00': '5 – 6',
+        '18:00 – 19:00': '6 – 7',
+        '19:00 – 20:00': '7 – 8',
+        '20:00 – 21:00': '8 – 9',
+        '21:00 – 22:00': '9 – 10',
+        '22:00 – 23:00': '10 – 11',
+        '23:00 – 24:00': '11 – 12'
+      };
+      return map[key] || key;
     }
   };
 

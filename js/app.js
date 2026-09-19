@@ -1,19 +1,31 @@
 /**
- * Cadence Application Controller
- * Orchestrates the hourly ledger, date navigator, drawer interactions, and real-time metrics.
+ * Epoch Application Controller
+ * High-craftsmanship hourly ledger, Google Calendar date picker, and buttery-smooth typing engine.
  */
 document.addEventListener('DOMContentLoaded', () => {
   // Application State
   let activeDate = new Date();
-  let currentOpenHour = null;
+  let calendarViewDate = new Date();
+  let currentOpenSlot = null;
   const saveDebounceTimers = {};
 
   // DOM Elements
   const dateHeading = document.getElementById('dateHeading');
-  const dateSub = document.getElementById('dateSub');
   const ledgerContainer = document.getElementById('ledgerContainer');
-  const loggedMetric = document.getElementById('loggedMetric');
-  const progressFill = document.getElementById('progressFill');
+
+  // Calendar Elements
+  const btnCalendarToggle = document.getElementById('btnCalendarToggle');
+  const calendarToggleLabel = document.getElementById('calendarToggleLabel');
+  const calendarPopover = document.getElementById('calendarPopover');
+  const calMonthYear = document.getElementById('calMonthYear');
+  const calPrevMonth = document.getElementById('calPrevMonth');
+  const calNextMonth = document.getElementById('calNextMonth');
+  const calGrid = document.getElementById('calGrid');
+  const calJumpToday = document.getElementById('calJumpToday');
+
+  // Date Nav Arrows
+  const btnPrevDay = document.getElementById('btnPrevDay');
+  const btnNextDay = document.getElementById('btnNextDay');
 
   // Drawer Elements
   const drawerBackdrop = document.getElementById('drawerBackdrop');
@@ -31,18 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnToggleRecall = document.getElementById('btnToggleRecall');
   const btnExportMd = document.getElementById('btnExportMd');
 
-  // Date Navigation Buttons
-  const btnPrevDay = document.getElementById('btnPrevDay');
-  const btnNextDay = document.getElementById('btnNextDay');
-  const btnToday = document.getElementById('btnToday');
-
-  // Hours array: 07:00 to 23:00
-  const HOURS = [
-    '07:00 – 08:00', '08:00 – 09:00', '09:00 – 10:00', '10:00 – 11:00',
-    '11:00 – 12:00', '12:00 – 13:00', '13:00 – 14:00', '14:00 – 15:00',
-    '15:00 – 16:00', '16:00 – 17:00', '17:00 – 18:00', '18:00 – 19:00',
-    '19:00 – 20:00', '20:00 – 21:00', '21:00 – 22:00', '22:00 – 23:00',
-    '23:00 – 24:00'
+  // 17 Hourly Slots (Clean 12-Hour format without AM/PM or 24h clutter)
+  const TIME_SLOTS = [
+    { key: '07:00 – 08:00', label: '7 – 8', hour: 7 },
+    { key: '08:00 – 09:00', label: '8 – 9', hour: 8 },
+    { key: '09:00 – 10:00', label: '9 – 10', hour: 9 },
+    { key: '10:00 – 11:00', label: '10 – 11', hour: 10 },
+    { key: '11:00 – 12:00', label: '11 – 12', hour: 11 },
+    { key: '12:00 – 13:00', label: '12 – 1', hour: 12 },
+    { key: '13:00 – 14:00', label: '1 – 2', hour: 13 },
+    { key: '14:00 – 15:00', label: '2 – 3', hour: 14 },
+    { key: '15:00 – 16:00', label: '3 – 4', hour: 15 },
+    { key: '16:00 – 17:00', label: '4 – 5', hour: 16 },
+    { key: '17:00 – 18:00', label: '5 – 6', hour: 17 },
+    { key: '18:00 – 19:00', label: '6 – 7', hour: 18 },
+    { key: '19:00 – 20:00', label: '7 – 8', hour: 19 },
+    { key: '20:00 – 21:00', label: '8 – 9', hour: 20 },
+    { key: '21:00 – 22:00', label: '9 – 10', hour: 21 },
+    { key: '22:00 – 23:00', label: '10 – 11', hour: 22 },
+    { key: '23:00 – 24:00', label: '11 – 12', hour: 23 }
   ];
 
   /**
@@ -74,12 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Get current hour slot index
+   * Check if two dates represent the same day
    */
-  function getCurrentHourSlot() {
-    const currentHour = new Date().getHours();
-    const startStr = String(currentHour).padStart(2, '0') + ':00';
-    return HOURS.find(h => h.startsWith(startStr));
+  function isSameDay(d1, d2) {
+    return d1.getDate() === d2.getDate() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getFullYear() === d2.getFullYear();
   }
 
   /**
@@ -92,28 +111,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update Masthead Date
     dateHeading.textContent = formatEditorialDate(activeDate);
-    
-    // Sub-header details
-    const isTodayActive = isToday(activeDate);
-    dateSub.textContent = isTodayActive 
-      ? `Active Ledger • Week ${getWeekNumber(activeDate)} • Continuous Local Autosave`
-      : `Historical Archive • ${dateKey} • Local Storage`;
+
+    // Update Date Pill Label
+    if (isToday(activeDate)) {
+      calendarToggleLabel.textContent = 'Today';
+      btnCalendarToggle.classList.remove('active');
+    } else {
+      const monthShort = activeDate.toLocaleDateString('en-US', { month: 'short' });
+      calendarToggleLabel.textContent = `${monthShort} ${activeDate.getDate()}`;
+      btnCalendarToggle.classList.add('active');
+    }
 
     ledgerContainer.innerHTML = '';
-    let loggedCount = 0;
-    const currentHourSlot = isTodayActive ? getCurrentHourSlot() : null;
+    const currentRealHour = new Date().getHours();
+    const isCurrentDay = isToday(activeDate);
 
-    HOURS.forEach(hour => {
-      const entry = hoursData[hour] || { bullet: '', raw: '' };
+    TIME_SLOTS.forEach(slot => {
+      const entry = hoursData[slot.key] || { bullet: '', raw: '' };
       const hasBullet = entry.bullet && entry.bullet.trim().length > 0;
       const hasRaw = entry.raw && entry.raw.trim().length > 0;
-      if (hasBullet || hasRaw) loggedCount++;
 
-      const isCurrent = (hour === currentHourSlot);
+      const isCurrent = isCurrentDay && (slot.hour === currentRealHour);
 
       const row = document.createElement('div');
       row.className = `hour-row ${isCurrent ? 'is-current' : ''}`;
-      row.id = `hour-row-${hour.replace(/[\s–:]/g, '_')}`;
+      row.id = `hour-row-${slot.key.replace(/[\s–:]/g, '_')}`;
 
       // Calculate raw word count
       const rawWords = hasRaw ? entry.raw.trim().split(/\s+/).length : 0;
@@ -123,111 +145,154 @@ document.addEventListener('DOMContentLoaded', () => {
 
       row.innerHTML = `
         <div class="time-col">
-          <div class="time-badge">${hour}</div>
-          ${isCurrent ? `<span class="current-indicator">Current Hour</span>` : ''}
+          ${isCurrent ? `<span class="current-dot" title="Current Hour"></span>` : ''}
+          <div class="time-badge">${slot.label}</div>
         </div>
         <div class="content-col">
           <textarea class="bullet-input" 
-                    placeholder="• 1–2 key learnings, decisions, or deltas from this hour..."
-                    rows="2">${escapeHTML(entry.bullet)}</textarea>
+                    placeholder="• "
+                    rows="1">${escapeHTML(entry.bullet)}</textarea>
         </div>
         <div class="action-col">
-          <button class="btn-drawer-toggle ${hasRaw ? 'has-content' : ''}" data-hour="${hour}">
+          <button class="btn-drawer-toggle ${hasRaw ? 'has-content' : ''}" data-key="${slot.key}">
             ${drawerBtnText}
           </button>
         </div>
       `;
 
-      // Bullet Input Event Listeners
+      // Smooth Typing & Bullet Management
       const textarea = row.querySelector('.bullet-input');
       autoResizeTextarea(textarea);
 
-      textarea.addEventListener('input', (e) => {
-        autoResizeTextarea(e.target);
-        handleBulletTyping(e.target);
-        debounceSaveBullet(dateKey, hour, e.target.value);
-        updateProgress();
+      // On focus: if empty, start with bullet
+      textarea.addEventListener('focus', () => {
+        if (!textarea.value || textarea.value.trim().length === 0) {
+          textarea.value = '• ';
+          autoResizeTextarea(textarea);
+        }
       });
 
-      // Handle Enter for clean bullet continuation
+      // On blur: if only bullet left, clear it
+      textarea.addEventListener('blur', () => {
+        if (textarea.value.trim() === '•') {
+          textarea.value = '';
+          autoResizeTextarea(textarea);
+          debounceSaveBullet(dateKey, slot.key, '');
+        }
+      });
+
+      // Keydown Handling for buttery smooth typing
       textarea.addEventListener('keydown', (e) => {
+        // Enter key handling
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
-          const value = textarea.value;
-          const before = value.substring(0, start);
-          const after = value.substring(end);
+          const val = textarea.value;
           
-          textarea.value = before + '\n• ' + after;
-          textarea.selectionStart = textarea.selectionEnd = start + 3;
+          // Check if current line is an empty bullet
+          const lines = val.substring(0, start).split('\n');
+          const currentLine = lines[lines.length - 1];
+
+          if (currentLine.trim() === '•') {
+            // Exit bullet list if pressing enter on empty bullet
+            const beforeLine = val.substring(0, start - currentLine.length);
+            const after = val.substring(end);
+            textarea.value = beforeLine + after;
+            textarea.selectionStart = textarea.selectionEnd = beforeLine.length;
+          } else {
+            // Create next smooth bullet
+            const before = val.substring(0, start);
+            const after = val.substring(end);
+            textarea.value = before + '\n• ' + after;
+            textarea.selectionStart = textarea.selectionEnd = start + 3;
+          }
+
           autoResizeTextarea(textarea);
           textarea.dispatchEvent(new Event('input'));
+          return;
+        }
+
+        // Backspace handling to avoid trapped bullets
+        if (e.key === 'Backspace') {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          if (start === end) {
+            const val = textarea.value;
+            // If deleting right after a bullet '• '
+            if (val.substring(start - 2, start) === '• ') {
+              e.preventDefault();
+              textarea.value = val.substring(0, start - 2) + val.substring(start);
+              textarea.selectionStart = textarea.selectionEnd = start - 2;
+              autoResizeTextarea(textarea);
+              textarea.dispatchEvent(new Event('input'));
+            }
+          }
         }
       });
 
-      // Raw Stream Drawer Toggle
+      textarea.addEventListener('input', (e) => {
+        autoResizeTextarea(e.target);
+        
+        // Ensure starting bullet if user typed fresh
+        const val = e.target.value;
+        if (val.length === 1 && val !== '•') {
+          e.target.value = '• ' + val;
+          e.target.selectionStart = e.target.selectionEnd = 3;
+        }
+
+        debounceSaveBullet(dateKey, slot.key, e.target.value);
+      });
+
+      // Drawer Toggle
       const drawerBtn = row.querySelector('.btn-drawer-toggle');
       drawerBtn.addEventListener('click', () => {
-        openDrawer(hour);
+        openDrawer(slot);
       });
 
       ledgerContainer.appendChild(row);
     });
-
-    updateProgressMetrics(loggedCount, HOURS.length);
   }
 
   /**
-   * Auto-prefix bullet if starting fresh
-   */
-  function handleBulletTyping(el) {
-    if (el.value.length === 1 && el.value !== '•') {
-      el.value = '• ' + el.value;
-    }
-  }
-
-  /**
-   * Dynamic height auto-resizer
+   * Dynamic height auto-resizer with zero lag
    */
   function autoResizeTextarea(el) {
     el.style.height = 'auto';
-    el.style.height = (el.scrollHeight) + 'px';
+    el.style.height = Math.max(44, el.scrollHeight) + 'px';
   }
 
   /**
    * Debounced save for bullet summaries
    */
-  function debounceSaveBullet(dateKey, hour, value) {
-    const key = `bullet_${hour}`;
+  function debounceSaveBullet(dateKey, slotKey, value) {
+    const key = `bullet_${slotKey}`;
     clearTimeout(saveDebounceTimers[key]);
     saveDebounceTimers[key] = setTimeout(() => {
-      window.CadenceStorage.saveHour(dateKey, hour, { bullet: value });
+      window.CadenceStorage.saveHour(dateKey, slotKey, { bullet: value });
     }, 350);
   }
 
   /**
    * Debounced save for raw stream textarea
    */
-  function debounceSaveRaw(dateKey, hour, value) {
-    const key = `raw_${hour}`;
+  function debounceSaveRaw(dateKey, slotKey, value) {
+    const key = `raw_${slotKey}`;
     clearTimeout(saveDebounceTimers[key]);
     saveDebounceTimers[key] = setTimeout(() => {
-      window.CadenceStorage.saveHour(dateKey, hour, { raw: value });
-      updateDrawerButtonState(hour, value);
+      window.CadenceStorage.saveHour(dateKey, slotKey, { raw: value });
+      updateDrawerButtonState(slotKey, value);
     }, 350);
   }
 
   /**
    * Update drawer button visual state in the ledger
    */
-  function updateDrawerButtonState(hour, rawText) {
-    const dateKey = formatDateKey(activeDate);
-    const dayData = window.CadenceStorage.loadDay(dateKey);
+  function updateDrawerButtonState(slotKey, rawText) {
     const hasRaw = rawText && rawText.trim().length > 0;
     const words = hasRaw ? rawText.trim().split(/\s+/).length : 0;
 
-    const row = document.getElementById(`hour-row-${hour.replace(/[\s–:]/g, '_')}`);
+    const row = document.getElementById(`hour-row-${slotKey.replace(/[\s–:]/g, '_')}`);
     if (row) {
       const btn = row.querySelector('.btn-drawer-toggle');
       if (btn) {
@@ -238,45 +303,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Update header progress metric and fill bar
-   */
-  function updateProgressMetrics(logged, total) {
-    loggedMetric.textContent = `${logged} of ${total} hours logged`;
-    const pct = Math.round((logged / total) * 100);
-    progressFill.style.width = `${pct}%`;
-  }
-
-  function updateProgress() {
-    const dateKey = formatDateKey(activeDate);
-    const dayData = window.CadenceStorage.loadDay(dateKey);
-    const hoursData = dayData.hours || {};
-    let logged = 0;
-    HOURS.forEach(h => {
-      const entry = hoursData[h];
-      if ((entry?.bullet && entry.bullet.trim().length > 0) || (entry?.raw && entry.raw.trim().length > 0)) {
-        logged++;
-      }
-    });
-    updateProgressMetrics(logged, HOURS.length);
-  }
-
-  /**
    * Drawer Logic
    */
-  function openDrawer(hour) {
-    currentOpenHour = hour;
+  function openDrawer(slot) {
+    currentOpenSlot = slot;
     const dateKey = formatDateKey(activeDate);
     const dayData = window.CadenceStorage.loadDay(dateKey);
-    const entry = dayData.hours?.[hour] || { raw: '' };
+    const entry = dayData.hours?.[slot.key] || { raw: '' };
 
-    drawerHourTitle.textContent = `${hour}`;
+    drawerHourTitle.textContent = `${slot.label}`;
     rawTextarea.value = entry.raw || '';
     updateWordCount(entry.raw || '');
 
     drawerBackdrop.classList.add('active');
     streamDrawer.classList.add('open');
 
-    // Focus textarea after slide animation
     setTimeout(() => {
       rawTextarea.focus();
     }, 200);
@@ -288,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     streamDrawer.classList.remove('open');
     drawerBackdrop.classList.remove('active');
-    currentOpenHour = null;
+    currentOpenSlot = null;
   }
 
   function updateWordCount(text) {
@@ -301,9 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Raw Textarea Input Listener
   rawTextarea.addEventListener('input', (e) => {
     updateWordCount(e.target.value);
-    if (currentOpenHour) {
+    if (currentOpenSlot) {
       const dateKey = formatDateKey(activeDate);
-      debounceSaveRaw(dateKey, currentOpenHour, e.target.value);
+      debounceSaveRaw(dateKey, currentOpenSlot.key, e.target.value);
     }
   });
 
@@ -313,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Speech Recognition integration
   if (window.CadenceSpeech) {
-    window.CadenceSpeech.onStateChange = (isListening, error) => {
+    window.CadenceSpeech.onStateChange = (isListening) => {
       if (isListening) {
         btnMic.classList.add('recording');
         btnMic.querySelector('.mic-label').textContent = 'Listening...';
@@ -329,6 +370,142 @@ document.addEventListener('DOMContentLoaded', () => {
       window.CadenceSpeech.toggle(rawTextarea);
     });
   }
+
+  // ==========================================================================
+  // GOOGLE CALENDAR POPOVER LOGIC
+  // ==========================================================================
+  function renderCalendar() {
+    const year = calendarViewDate.getFullYear();
+    const month = calendarViewDate.getMonth();
+
+    // Set Month Year title (e.g. September 2026)
+    calMonthYear.textContent = calendarViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    calGrid.innerHTML = '';
+
+    // First day of month (0 = Sunday, 1 = Monday, ...)
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    // Number of days in current month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Number of days in previous month
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    // 1. Previous month trailing days
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      const dayNum = daysInPrevMonth - i;
+      const el = document.createElement('div');
+      el.className = 'cal-day cal-day-other';
+      el.textContent = dayNum;
+      calGrid.appendChild(el);
+    }
+
+    // 2. Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const thisDate = new Date(year, month, day);
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = day;
+
+      if (isToday(thisDate)) {
+        el.classList.add('cal-day-today');
+      }
+      if (isSameDay(thisDate, activeDate)) {
+        el.classList.add('cal-day-selected');
+      }
+
+      el.addEventListener('click', () => {
+        activeDate = new Date(year, month, day);
+        calendarViewDate = new Date(activeDate);
+        closeCalendarPopover();
+        renderDay();
+      });
+
+      calGrid.appendChild(el);
+    }
+
+    // 3. Next month leading days to complete full weeks (up to 35 or 42)
+    const totalRendered = firstDayIndex + daysInMonth;
+    const remainingSlots = (totalRendered <= 35) ? (35 - totalRendered) : (42 - totalRendered);
+
+    for (let day = 1; day <= remainingSlots; day++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day cal-day-other';
+      el.textContent = day;
+      calGrid.appendChild(el);
+    }
+  }
+
+  function toggleCalendarPopover() {
+    const isOpen = calendarPopover.classList.contains('open');
+    if (isOpen) {
+      closeCalendarPopover();
+    } else {
+      openCalendarPopover();
+    }
+  }
+
+  function openCalendarPopover() {
+    calendarViewDate = new Date(activeDate);
+    renderCalendar();
+    calendarPopover.classList.add('open');
+  }
+
+  function closeCalendarPopover() {
+    calendarPopover.classList.remove('open');
+  }
+
+  // Calendar Event Listeners
+  btnCalendarToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCalendarPopover();
+  });
+
+  dateHeading.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCalendarPopover();
+  });
+
+  calPrevMonth.addEventListener('click', (e) => {
+    e.stopPropagation();
+    calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  calNextMonth.addEventListener('click', (e) => {
+    e.stopPropagation();
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  calJumpToday.addEventListener('click', (e) => {
+    e.stopPropagation();
+    activeDate = new Date();
+    calendarViewDate = new Date(activeDate);
+    closeCalendarPopover();
+    renderDay();
+  });
+
+  // Close calendar popover on outside click
+  document.addEventListener('click', (e) => {
+    if (!calendarPopover.contains(e.target) && 
+        !btnCalendarToggle.contains(e.target) && 
+        !dateHeading.contains(e.target)) {
+      closeCalendarPopover();
+    }
+  });
+
+  // Date Navigation Arrows
+  btnPrevDay.addEventListener('click', () => {
+    activeDate.setDate(activeDate.getDate() - 1);
+    calendarViewDate = new Date(activeDate);
+    renderDay();
+  });
+
+  btnNextDay.addEventListener('click', () => {
+    activeDate.setDate(activeDate.getDate() + 1);
+    calendarViewDate = new Date(activeDate);
+    renderDay();
+  });
 
   // Evening Replay Modal
   btnEveningReplay.addEventListener('click', () => {
@@ -350,27 +527,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.CadenceStorage.exportDayMarkdown(dateKey);
   });
 
-  // Date Navigation Handlers
-  btnPrevDay.addEventListener('click', () => {
-    activeDate.setDate(activeDate.getDate() - 1);
-    renderDay();
-  });
-
-  btnNextDay.addEventListener('click', () => {
-    activeDate.setDate(activeDate.getDate() + 1);
-    renderDay();
-  });
-
-  btnToday.addEventListener('click', () => {
-    activeDate = new Date();
-    renderDay();
-  });
-
   // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
-    // Esc closes drawer or modal
     if (e.key === 'Escape') {
       closeDrawer();
+      closeCalendarPopover();
       window.CadenceReplay.close();
     }
   });
@@ -387,15 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
         "'": '&#039;'
       }[m];
     });
-  }
-
-  // Utility: ISO Week number
-  function getWeekNumber(d) {
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const dayNum = date.getUTCDay() || 7;
-    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
   }
 
   // Initial Boot
