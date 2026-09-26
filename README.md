@@ -1,4 +1,4 @@
-# Epoch (時代) — The Cognitive Friction Journal
+# Saarum (時代) — The Cognitive Friction Journal
 
 > **A distraction-free, local-first hourly ledger and raw voice stream built to solve the "AI Retention Debt" through intentional cognitive friction.**
 
@@ -21,7 +21,7 @@ In the era of AI (ChatGPT, Claude, Cursor), we absorb massive quantities of high
 
 ## 🏛️ The Dual-Surface Architecture
 
-Epoch enforces a **strict separation of concerns**:
+Saarum enforces a **strict separation of concerns**:
 
 ```
 ┌──────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────┐
@@ -47,26 +47,26 @@ Epoch enforces a **strict separation of concerns**:
 
 ## 🚀 Live Demo & Deployment
 
-Epoch is a pure client-side web application with zero build steps or server dependencies.
+Saarum is a pure client-side web application with zero build steps or server dependencies.
 
 ### Option 1: Run Locally
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Nandan2701/Epoch.git
+   git clone https://github.com/Nandan2701/Saarum.git
    ```
 2. Open `index.html` in Chrome, Edge, or Brave.
 
 ### Option 2: Deploy to GitHub Pages (1-Click)
 1. Go to your repository settings on GitHub: **Settings $\rightarrow$ Pages**.
 2. Under **Build and deployment $\rightarrow$ Branch**, select `main` (or `master`) and `/ (root)`.
-3. Click **Save**. Your site will be live instantly at `https://nandan2701.github.io/Epoch/`!
+3. Click **Save**. Your site will be live instantly at `https://nandan2701.github.io/Saarum/`!
 
 ---
 
 ## 🗂️ Project Structure
 
 ```
-Epoch/
+Saarum/
 ├── index.html              # Core editorial layout, timeline, drawer & modal DOM
 ├── documentation.md        # Deep cognitive science brief, origin story & architecture
 ├── README.md               # Repository documentation and deployment guide

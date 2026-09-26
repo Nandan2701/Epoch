@@ -1,13 +1,13 @@
-# Epoch — Product Philosophy, Origin & Architectural Blueprint
+# Saarum — Product Philosophy, Origin & Architectural Blueprint
 
 > **For Future AI Agents & Collaborators:**  
-> This document is the single source of truth for **Epoch**. It explains the cognitive science problem, why this exact product was created, how we researched it on Reddit, why traditional note-taking fails in the AI era, every feature implemented, and how the system operates—without needing to inspect the underlying source code.
+> This document is the single source of truth for **Saarum**. It explains the cognitive science problem, why this exact product was created, how we researched it on Reddit, why traditional note-taking fails in the AI era, every feature implemented, and how the system operates—without needing to inspect the underlying source code.
 
 ---
 
 ## 1. Executive Summary & Core Identity
 
-* **Product Name:** Epoch
+* **Product Name:** Saarum
 * **One-Line Pitch:** An agency-grade, distraction-free hourly ledger and raw dictation canvas built to solve the "AI Retention Debt" through lightweight cognitive friction.
 * **Format:** Zero-backend, local-first web application running entirely in Chrome/Edge, persisting to browser `localStorage`.
 * **Primary Paradigm:** **Strict Separation of Concerns** — A minimalist front-facing timeline restricted to **1–2 distilled bullet points per hour**, paired with a slide-over **"Raw Stream" drawer** for voice dictation, meeting transcripts, and uncensored braindumps.

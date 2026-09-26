@@ -1,5 +1,5 @@
 /**
- * Epoch Application Controller
+ * Saarum Application Controller
  * High-craftsmanship hourly ledger, Google Calendar date picker, and buttery-smooth typing engine.
  */
 document.addEventListener('DOMContentLoaded', () => {
