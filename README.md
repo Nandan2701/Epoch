@@ -47,16 +47,21 @@ Saarum enforces a **strict separation of concerns**:
 
 ## 🚀 Live Demo & Deployment
 
+🌐 **Live Application:** [https://saarum.vercel.app/](https://saarum.vercel.app/)
+
 Saarum is a pure client-side web application with zero build steps or server dependencies.
 
-### Option 1: Run Locally
+### Option 1: Live Web App (Vercel)
+Launch directly in your browser: **[saarum.vercel.app](https://saarum.vercel.app/)**
+
+### Option 2: Run Locally
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Nandan2701/Saarum.git
+   git clone https://github.com/Nandan2701/Epoch.git
    ```
 2. Open `index.html` in Chrome, Edge, or Brave.
 
-### Option 2: Deploy to GitHub Pages (1-Click)
+### Option 3: Deploy to GitHub Pages (1-Click)
 1. Go to your repository settings on GitHub: **Settings $\rightarrow$ Pages**.
 2. Under **Build and deployment $\rightarrow$ Branch**, select `main` (or `master`) and `/ (root)`.
 3. Click **Save**. Your site will be live instantly at `https://nandan2701.github.io/Saarum/`!
